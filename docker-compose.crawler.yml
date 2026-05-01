@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Master Database (Source of Truth)
+  # Đảm bảo tính toàn vẹn dữ liệu trước khi đẩy vào pipeline
+  news_db:
+    image: mongo:6.0
+    container_name: crawler_mongo
+    command: ["--wiredTigerCacheSizeGB", "0.5"] # Performance: Giới hạn Cache để nhường RAM cho AI
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # Schema Validation
+    networks:
+      - crawler_internal
+
+  # Message Broker (The Highway)
+  # Đóng vai trò Interface Segregation giữa Crawler và RAG
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: messaging_broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - shared_pipeline
+
+  # Crawler Service (Single Responsibility: Collect & Persist)
+  crawler_worker:
+    build: ./crawler
+    depends_on:
+      - news_db
+      - rabbitmq
+    environment:
+      - MONGO_URI=mongodb://news_db:27017/commodities_news
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+    networks:
+      - crawler_internal
+      - shared_pipeline
+
+networks:
+  crawler_internal: # Vùng kín cho DB
+  shared_pipeline:
+    external: true  # Vùng chung để kết nối với các hệ thống khác
+
+volumes:
+  mongo_data:

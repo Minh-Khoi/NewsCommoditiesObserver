@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Evaluator (The Judge)
+  # Áp dụng Liskov Substitution: Có thể thay đổi model giám khảo dễ dàng
+  rag_evaluator:
+    build: ./evaluator
+    container_name: rag_quality_test
+    volumes:
+      - ./tests:/app/tests
+      - ./results:/app/results
+    environment:
+      - TARGET_API_URL=http://rag_query_api:8000
+      - EVAL_MODEL=gpt-4o # Model AI giỏi nhất dùng để test
+      - EVAL_METRICS=faithfulness,relevance,context_precision
+    networks:
+      - rag_internal # Để kết nối trực tiếp với API và DB
+
+networks:
+  rag_internal:
+    external: true # Kết nối với network của cụm RAG

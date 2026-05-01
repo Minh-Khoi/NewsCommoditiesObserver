@@ -1,0 +1,24 @@
+Stack 1: Data Ingestion & Storage (The Crawler System)
+This stack is responsible for the Open/Closed Principle (OCP), allowing dev to add new scrapers without modifying the core storage logic.
+
+news_db (MongoDB): The "Source of Truth" for the system. It stores raw and semi-structured article data. It uses JSON Schema Validation to enforce Data Integrity at the persistence layer.
+
+rabbitmq (Message Broker): Acts as the Interface Segregation layer. It decouples the Crawler from the RAG system, allowing asynchronous communication and handling backpressure.
+
+crawler_worker (Python): The service that performs the actual scraping. It follows the Single Responsibility Principle (SRP) by only focusing on data collection, validation, and publishing to the broker.
+
+Stack 2: Intelligence & Retrieval (The RAG System)
+This stack implements the CQRS (Command Query Responsibility Segregation) pattern by splitting the embedding logic from the user-facing search logic.
+
+vector_db (Qdrant/Milvus): The high-performance semantic index. It stores vector embeddings of the articles for fast similarity searches.
+
+rag_ingestor (Worker Service): The "Command" side. It consumes messages from RabbitMQ, performs Embedding (Vectorization), and writes to the Vector DB. This is Compute-intensive.
+
+rag_query_api (FastAPI): The "Query" side. It handles incoming user requests, retrieves relevant context from the Vector DB, and interfaces with the LLM. It is optimized for Low Latency.
+
+Stack 3: Quality Assurance & Evaluation (The Evaluator System)
+This stack follows the Dependency Inversion Principle (DIP), allowing you to swap out "Judge" models (e.g., switching from GPT-4o to Claude) without breaking the test suite.
+
+rag_evaluator (Evaluation Engine): A standalone service that runs the RAG Triad metrics (Faithfulness, Answer Relevance, Context Precision).
+
+eval_judge_llm (External/Local LLM): The high-tier model used as the "Teacher" to grade the performance of the smaller "Student" model used in the Query API.

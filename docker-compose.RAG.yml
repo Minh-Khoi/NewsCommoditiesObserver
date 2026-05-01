@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Vector Database (Semantic Index)
+  vector_db:
+    image: qdrant/qdrant
+    container_name: rag_vector_store
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rag_internal
+
+  # RAG Ingestor (Command Side - Write)
+  # Chuyên xử lý nhúng (Embedding) từ RabbitMQ
+  rag_ingestor:
+    build: 
+      context: ./rag
+      dockerfile: Ingestor.Dockerfile
+    networks:
+      - shared_pipeline
+      - rag_internal
+    environment:
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+      - VECTOR_DB_URL=http://vector_db:6333
+
+  # RAG Query API (Query Side - Read)
+  # Chuyên phục vụ User, ưu tiên Latency thấp
+  rag_query_api:
+    build:
+      context: ./rag
+      dockerfile: QueryAPI.Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - rag_internal
+    environment:
+      - VECTOR_DB_URL=http://vector_db:6333
+
+networks:
+  rag_internal:
+    external: true
+  shared_pipeline:
+    external: true
+
+volumes:
+  qdrant_data:
