@@ -24,6 +24,8 @@ services:
     environment:
       - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
       - VECTOR_DB_URL=http://vector_db:6333
+      - LLM_API_URL=http://intelligence_hub:11434
+      - EMBED_MODEL=nomic-embed-text
 
   # RAG Query API (Query Side - Read)
   # Chuyên phục vụ User, ưu tiên Latency thấp
@@ -34,9 +36,12 @@ services:
     ports:
       - "8000:8000"
     networks:
+      - shared_pipeline # Kết nối để gọi LLM
       - rag_internal
     environment:
       - VECTOR_DB_URL=http://vector_db:6333
+      - LLM_API_URL=http://intelligence_hub:11434
+      - RAG_MODEL=llama3.2:3b
 
 networks:
   rag_internal:

@@ -5,14 +5,15 @@ echo "Creating shared networks..."
 docker network create shared_pipeline 2>/dev/null || true
 docker network create rag_internal 2>/dev/null || true
 
-# 2. Start Crawler System (Master DB & Broker)
-echo "Starting Crawler Stack..."
+# 2. Start Crawler & LLM Systems (Infrastructure & Intelligence)
+echo "Starting Infrastructure Stacks..."
+docker-compose -f docker-compose.ollama.yml -p commodities-llm up -d
 docker-compose -f docker-compose.crawler.yml -p commodities-crawler up -d
 
 # 3. Performance Awareness: Wait for RabbitMQ to be healthy
 # This prevents the RAG system from crashing on startup
-echo "Waiting for Message Broker to stabilize..."
-sleep 10 
+echo "Waiting for intelligence_hub (Ollama) and Message Broker to stabilize..."
+sleep 15 
 
 # 4. Start RAG System (Intelligence Engine)
 echo "Starting RAG Stack..."

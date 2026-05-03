@@ -35,6 +35,7 @@ services:
         curl http://llm_server:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}';
         curl http://llm_server:11434/api/pull -d '{\"name\": \"deepseek-r1:1.5b\"}';
         curl http://llm_server:11434/api/pull -d '{\"name\": \"llama3.2:3b\"}'
+        curl http://llm_server:11434/api/pull -d '{\"name\": \"gemma2:2b\"}'
       "
 
 networks:

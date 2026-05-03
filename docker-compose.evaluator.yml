@@ -11,10 +11,12 @@ services:
       - ./results:/app/results
     environment:
       - TARGET_API_URL=http://rag_query_api:8000
-      - EVAL_MODEL=gpt-4o # Model AI giỏi nhất dùng để test
+      - LLM_API_URL=http://intelligence_hub:11434
+      - EVAL_MODEL=gemma2:2b # Model AI giỏi nhất dùng để test
       - EVAL_METRICS=faithfulness,relevance,context_precision
     networks:
-      - rag_internal # Để kết nối trực tiếp với API và DB
+      - rag_internal 
+      - shared_pipeline # Kết nối tới LLM Hub
 
 networks:
   rag_internal:

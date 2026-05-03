@@ -1,24 +1,35 @@
+Stack 0: Intelligence Hub (The LLM Server)
+This foundation stack provides centralized AI capabilities to all other services via the Shared Pipeline. It is optimized for local execution with strict resource management.
+
+intelligence_hub (Ollama): The core LLM engine. It hosts multiple models and is configured with aggressive RAM management (OLLAMA_KEEP_ALIVE) and sequential processing (OLLAMA_MAX_LOADED_MODELS=1) to ensure system stability on hardware with limited CPU/GPU.
+
+model_provisioner (Utility): An automated service that ensures the required models are pulled:
+- nomic-embed-text: Specialized for high-precision vector embeddings.
+- deepseek-r1:1.5b: Lightweight reasoning model for fast, edge-side summarization.
+- llama3.2:3b: The "Student" model used for high-quality RAG answer generation.
+- gemma2:2b: The specialized "Judge" model used for logical evaluation.
+
 Stack 1: Data Ingestion & Storage (The Crawler System)
 This stack is responsible for the Open/Closed Principle (OCP), allowing dev to add new scrapers without modifying the core storage logic.
 
-news_db (MongoDB): The "Source of Truth" for the system. It stores raw and semi-structured article data. It uses JSON Schema Validation to enforce Data Integrity at the persistence layer.
+news_db (MongoDB): The "Source of Truth" for the system. It stores raw and semi-structured article data. It uses JSON Schema Validation and limited cache (0.5GB) to ensure Data Integrity while freeing RAM for AI.
 
-rabbitmq (Message Broker): Acts as the Interface Segregation layer. It decouples the Crawler from the RAG system, allowing asynchronous communication and handling backpressure.
+rabbitmq (Message Broker): Acts as the Interface Segregation layer. It decouples the Crawler from the RAG system. It coordinates data flow after the AI Agent has processed the content.
 
-crawler_worker (Python): The service that performs the actual scraping. It follows the Single Responsibility Principle (SRP) by only focusing on data collection, validation, and publishing to the broker.
+crawler_worker (Python AI-Agent): An intelligent scraper that follows the Single Responsibility Principle (SRP). It collects raw data, leverages the intelligence_hub (DeepSeek-R1) to generate concise summaries, persists the enriched data to MongoDB, and publishes events to RabbitMQ.
 
 Stack 2: Intelligence & Retrieval (The RAG System)
 This stack implements the CQRS (Command Query Responsibility Segregation) pattern by splitting the embedding logic from the user-facing search logic.
 
-vector_db (Qdrant/Milvus): The high-performance semantic index. It stores vector embeddings of the articles for fast similarity searches.
+vector_db (Qdrant): The high-performance semantic index. It stores vector embeddings of the articles for fast similarity searches.
 
-rag_ingestor (Worker Service): The "Command" side. It consumes messages from RabbitMQ, performs Embedding (Vectorization), and writes to the Vector DB. This is Compute-intensive.
+rag_ingestor (Worker Service): The "Command" side. It consumes messages from RabbitMQ, calls the intelligence_hub (nomic-embed-text) for embeddings, and writes to the Vector DB. This is Compute-intensive.
 
-rag_query_api (FastAPI): The "Query" side. It handles incoming user requests, retrieves relevant context from the Vector DB, and interfaces with the LLM. It is optimized for Low Latency.
+rag_query_api (FastAPI): The "Query" side. It handles incoming user requests, retrieves relevant context from the Vector DB, and interfaces with the intelligence_hub (Llama-3.2:3b "Student") to generate final answers. It is optimized for Low Latency.
 
 Stack 3: Quality Assurance & Evaluation (The Evaluator System)
-This stack follows the Dependency Inversion Principle (DIP), allowing you to swap out "Judge" models (e.g., switching from GPT-4o to Claude) without breaking the test suite.
+This stack follows the Dependency Inversion Principle (DIP), allowing you to swap out "Judge" models without breaking the test suite.
 
-rag_evaluator (Evaluation Engine): A standalone service that runs the RAG Triad metrics (Faithfulness, Answer Relevance, Context Precision).
+rag_evaluator (Evaluation Engine): A standalone service that runs the RAG Triad metrics (Faithfulness, Answer Relevance, Context Precision). It connects to the intelligence_hub (Gemma-2:2b "Judge") to evaluate the Student's performance.
 
-eval_judge_llm (External/Local LLM): The high-tier model used as the "Teacher" to grade the performance of the smaller "Student" model used in the Query API.
+eval_judge_llm (Local/External LLM): The model used as the "Teacher." By using gemma2:2b, the system leverages a specialized logical model to critique the more general llama3.2:3b student, creating the necessary intelligence gap for objective evaluation.
