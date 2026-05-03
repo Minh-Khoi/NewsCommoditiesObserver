@@ -2,19 +2,19 @@ version: '3.8'
 
 services:
   # Master Database (Source of Truth)
-  # Đảm bảo tính toàn vẹn dữ liệu trước khi đẩy vào pipeline
   news_db:
     image: mongo:6.0
     container_name: crawler_mongo
-    command: ["--wiredTigerCacheSizeGB", "0.5"] # Performance: Giới hạn Cache để nhường RAM cho AI
+    # Performance: Giới hạn Cache (0.5GB) để nhường RAM 32GB của máy cho AI
+    command: ["--wiredTigerCacheSizeGB", "0.5"] 
     volumes:
       - mongo_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro # Schema Validation
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - crawler_internal
 
   # Message Broker (The Highway)
-  # Đóng vai trò Interface Segregation giữa Crawler và RAG
+  # Đóng vai trò điều phối dữ liệu sau khi Agent đã tóm tắt nội dung
   rabbitmq:
     image: rabbitmq:3-management
     container_name: messaging_broker
@@ -24,23 +24,34 @@ services:
     networks:
       - shared_pipeline
 
-  # Crawler Service (Single Responsibility: Collect & Persist)
+  # AI-Agent Crawler Worker
+  # Nhiệm vụ: Cào dữ liệu -> Gọi llm_server để tóm tắt -> Lưu DB vật lý -> Bắn Event
   crawler_worker:
     build: ./crawler
+    container_name: crawler_ai_agent
     depends_on:
       - news_db
       - rabbitmq
     environment:
       - MONGO_URI=mongodb://news_db:27017/commodities_news
       - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+      # Kết nối tới LLM Server Stack riêng thông qua shared_pipeline
+      - LLM_API_URL=http://intelligence_hub:11434 
+      - AI_MODEL_NAME=deepseek-r1:1.5b # Model nhẹ tối ưu cho CPU Intel
+    deploy:
+      resources:
+        limits:
+          # Giới hạn CPU thấp vì công việc nặng đã có llm_server lo[cite: 3]
+          cpus: '0.25' 
+          memory: 2G
     networks:
       - crawler_internal
       - shared_pipeline
 
 networks:
-  crawler_internal: # Vùng kín cho DB
+  crawler_internal: 
   shared_pipeline:
-    external: true  # Vùng chung để kết nối với các hệ thống khác
+    external: true # Kết nối tới mạng chung của LLM Server
 
 volumes:
   mongo_data:

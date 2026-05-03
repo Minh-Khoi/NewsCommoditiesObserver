@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  llm_server:
+    image: ollama/ollama:latest
+    container_name: intelligence_hub
+    environment:
+      # Performance Awareness: Quản lý bộ nhớ nghiêm ngặt
+      - OLLAMA_KEEP_ALIVE=2m       # Giải phóng RAM ngay sau khi dùng xong
+      - OLLAMA_MAX_LOADED_MODELS=1 # Chỉ cho phép 1 model nằm trên RAM tại một thời điểm
+      - OLLAMA_NUM_PARALLEL=1      # Không chạy song song để tránh treo CPU
+    volumes:
+      - ollama_storage:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - shared_pipeline
+    deploy:
+      resources:
+        limits:
+          # Giới hạn để dành 8GB RAM và 2 core CPU cho IDE/OS
+          cpus: '0.75' 
+          memory: 12G 
+    restart: always
+
+  # Tự động pull model nhẹ để tối ưu CPU
+  model_provisioner:
+    image: curlimages/curl
+    depends_on:
+      - llm_server
+    networks:
+      - shared_pipeline
+    command: >
+      sh -c "
+        curl http://llm_server:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}';
+        curl http://llm_server:11434/api/pull -d '{\"name\": \"deepseek-r1:1.5b\"}';
+        curl http://llm_server:11434/api/pull -d '{\"name\": \"llama3.2:3b\"}'
+      "
+
+networks:
+  shared_pipeline:
+    external: true
+
+volumes:
+  ollama_storage:
