@@ -30,6 +30,7 @@ services:
       - llm_server
     networks:
       - shared_pipeline
+    restart: on-failure
     command: >
       sh -c "
         curl http://llm_server:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}';
