@@ -1,0 +1,15 @@
+Prompt: "Write two Python classes for content processing: AIAgentProcessor and JSONProcessor.
+
+1. AIAgentProcessor: 
+   - Receives raw HTML.
+   - Uses the Ollama API (model: deepseek-r1:1.5b) to extract structured news data (title, summary, date, sentiment).
+   - Must handle timeouts and use a circuit breaker for the LLM server.
+
+2. JSONProcessor:
+   - Receives a dictionary/JSON.
+   - Performs direct field mapping and transformation to extract the same news data fields.
+
+Requirements:
+- Both processors must return a unified 'NewsArticle' Pydantic model to ensure consistency. Apply strict Pydantic validation for the 'date' field to normalize inconsistent AI outputs.
+- Apply the Dependency Inversion Principle: both should implement a 'BaseProcessor' interface.
+- Use Pydantic for strict data validation before the data reaches the repository."

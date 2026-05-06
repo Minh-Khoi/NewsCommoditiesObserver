@@ -1,0 +1,19 @@
+Prompt: "Act as a Senior Solution Architect. Write a Python-based Crawler Engine using the Strategy Pattern.
+
+Define an abstract ScrapingStrategy class with a scrape(url) method.
+
+Implement two distinct strategies:
+1. StaticScrapingStrategy: Uses httpx to fetch the page and BeautifulSoup to parse/clean raw HTML.
+2. APIScrapingStrategy: Uses httpx to fetch structured JSON data.
+
+Implement a Processing Pipeline:
+- Data from StaticScrapingStrategy must be routed to an HTMLDomProcessor (for parsing scraped HTML 's inner text). 
+- Data from APIScrapingStrategy must be routed to a JSONProcessor (for parsing response 's body in JSON).
+Both processors then implements AIAgentHelper for LLM reasoning
+
+Create a CrawlerContext that selects the appropriate strategy and ensures the data is handed off to the corresponding processor. Use asyncio.Semaphore to limit concurrent AI processing to avoid overloading the Intel CPU.  
+
+Ensure SOLID compliance, especially the Open/Closed Principle so new strategy-processor pairs can be added without modifying the core engine.
+"
+
+

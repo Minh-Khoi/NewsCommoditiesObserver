@@ -1,0 +1,11 @@
+Prompt: "Write a Python script to integrate the Crawler processors with MongoDB and RabbitMQ.
+
+Create a Repository pattern for MongoDB interactions to store the 'NewsArticle' objects produced by the processors.
+
+Implement a MessageProducer that sends a 'news_crawled' event to RabbitMQ once data is persisted. Ensure the MessageProducer remains unaware of MongoDB by having the Service Layer trigger the message only after a successful repository save.
+
+The script must be agnostic of whether the 'NewsArticle' came from the AIAgentProcessor or JSONProcessor, relying on the unified Pydantic interface.
+
+Ensure Single Responsibility Principle: separate the message brokering logic from the data persistence logic.
+
+Optimize MongoDB performance by limiting the WiredTiger cache as defined in our Docker configuration."
