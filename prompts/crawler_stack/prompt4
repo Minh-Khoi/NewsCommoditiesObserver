@@ -1,0 +1,13 @@
+Prompt: "Refactor the Crawler's processing logic to strictly adhere to the Open/Closed Principle (OCP) and avoid the 'Fat Module' anti-pattern.
+
+Current Issue: Multiple processor classes and utility helpers (AIAgentHelper) are co-located in a single 'processors.py' file, forcing modifications to existing code whenever a new data source is added.
+
+Task:
+1.  **Modularize Utilities**: Move the 'AIAgentHelper' class to a separate 'infrastructure' or 'helpers' module. It is a utility for LLM interaction and should not live inside the business logic of processors.
+2.  **Package-Based Processors**: Convert 'processors.py' into a Python package (a directory named 'processors' with an '__init__.py').
+3.  **Strict File Separation**: 
+    - Create a 'base.py' within the package for the 'BaseProcessor' abstract interface.
+    - Create individual modules (e.g., 'html_processor.py', 'json_processor.py') for each implementation.
+4.  **Enhance Registry**: Update 'CrawlerContext' in 'engine.py' to ensure it remains completely closed to modification. The registration of new processor-strategy pairs should be handled via an external configuration or a clean 'init' sequence, ensuring that adding a third processor (e.g., 'RSSProcessor') only requires creating a new file, not editing existing ones.
+
+Requirement: The refactor must maintain the unified 'NewsArticle' Pydantic output and the asyncio.Semaphore concurrency limits defined in previous steps."

@@ -1,8 +1,9 @@
 import asyncio
-from typing import List, Dict, Type
-from .interfaces import ScrapingStrategy, BaseProcessor
+from typing import Dict, Type
+from .interfaces import ScrapingStrategy
 from .strategies import StaticScrapingStrategy, APIScrapingStrategy
-from .processors import HTMLDomProcessor, JSONProcessor, AIAgentHelper
+from .processors import BaseProcessor, HTMLDomProcessor, JSONProcessor
+from .helpers import AIAgentHelper
 
 class CrawlerContext:
     def __init__(self, ai_concurrency_limit: int = 2):
@@ -22,7 +23,6 @@ class CrawlerContext:
         self._processors[type(strategy)] = processor
 
     def _get_strategy_key(self, url: str) -> str:
-        # Simplified logic; in a production app, this could be more complex regex matching
         if "/api/" in url or url.endswith(".json"):
             return "api"
         return "static"
