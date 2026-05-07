@@ -1,6 +1,6 @@
-Prompt: "Write two Python classes for content processing: AIAgentProcessor and JSONProcessor.
+Prompt: "Write two Python classes for content processing: HTMLDomProcessor and JSONProcessor.
 
-1. AIAgentProcessor: 
+1. HTMLDomProcessor: 
    - Receives raw HTML.
    - Uses the Ollama API (model: deepseek-r1:1.5b) to extract structured news data (title, summary, date, sentiment).
    - Must handle timeouts and use a circuit breaker for the LLM server.

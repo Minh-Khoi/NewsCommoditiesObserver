@@ -1,0 +1,7 @@
+httpx
+beautifulsoup4
+pydantic
+dateparser
+motor
+aio-pika
+# Note: Ollama interaction is via httpx, no extra lib needed unless using ollama-python
