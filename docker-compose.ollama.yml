@@ -7,7 +7,7 @@ services:
     environment:
       # Performance Awareness: Quản lý bộ nhớ nghiêm ngặt
       - OLLAMA_KEEP_ALIVE=2m       # Giải phóng RAM ngay sau khi dùng xong
-      - OLLAMA_MAX_LOADED_MODELS=1 # Chỉ cho phép 1 model nằm trên RAM tại một thời điểm
+      - OLLAMA_MAX_LOADED_MODELS=4 # Chỉ cho phép 1 model nằm trên RAM tại một thời điểm
       - OLLAMA_NUM_PARALLEL=1      # Không chạy song song để tránh treo CPU
     volumes:
       - ollama_storage:/root/.ollama
