@@ -1,11 +1,12 @@
+from typing import Optional
 from bs4 import BeautifulSoup
 from .base import BaseProcessor
 from ..helpers import AIAgentHelper
 from ..models import NewsArticle
 
 class HTMLDomProcessor(BaseProcessor):
-    def __init__(self, ai_helper: AIAgentHelper):
-        self.ai_helper = ai_helper
+    def __init__(self, ai_helper: Optional[AIAgentHelper] = None):
+        super().__init__(ai_helper)
 
     async def process(self, html_content: str, url: str) -> NewsArticle:
         soup = BeautifulSoup(html_content, 'html.parser')

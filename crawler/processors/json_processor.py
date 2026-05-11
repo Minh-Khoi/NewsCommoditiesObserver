@@ -1,12 +1,12 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from .base import BaseProcessor
 from ..helpers import AIAgentHelper
 from ..models import NewsArticle
 
 class JSONProcessor(BaseProcessor):
-    def __init__(self, ai_helper: AIAgentHelper):
-        self.ai_helper = ai_helper
+    def __init__(self, ai_helper: Optional[AIAgentHelper] = None):
+        super().__init__(ai_helper)
 
     async def process(self, json_data: Dict[str, Any], url: str) -> NewsArticle:
         json_str = json.dumps(json_data)
